@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#141822">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ритм">
+<title>Ритм</title>
+<style>
+:root{color-scheme:dark;--bg:#141822;--card:#202636;--line:#374055;--text:#f5f6fa;--muted:#b5bfd3;--mint:#b8f5d7;--lav:#d9ccff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:var(--bg)}
+*{box-sizing:border-box}
+body{margin:0}
+main{max-width:510px;margin:auto;padding:calc(22px + env(safe-area-inset-top)) 19px calc(117px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.brand{display:flex;align-items:center;gap:8px;font-weight:750;font-size:15px}
+.mark{background:var(--mint);color:#12251e;border-radius:8px;width:28px;height:28px;display:grid;place-items:center;font-size:20px}
+.date,.hint{color:var(--muted);font-size:14px;line-height:1.5}
+h1,h2,p{margin:0}
+h1{font-size:clamp(36px,10vw,46px);line-height:1.04;letter-spacing:-.055em}
+h2{font-size:20px;letter-spacing:-.025em}
+.intro{margin:8px 0 20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:17px;margin-bottom:13px}
+.morning{background:linear-gradient(145deg,#243b36,#202c35 90%);border-color:#3f5d55}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.caption{font-weight:650;font-size:15px}
+.field{display:block;margin-top:13px}
+.field>span{display:block;margin-bottom:6px}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:13px}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button,input,select,textarea{min-height:44px;border-radius:12px;border:1px solid var(--line);color:var(--text);background:#181e2c}
+button{padding:7px 10px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--lav);outline-offset:2px}
+.choices button{font-size:14px;background:#1a2a2a;border-color:#476358}
+.choices button[aria-pressed=true],.primary{background:var(--mint);color:#12251e;border-color:transparent;font-weight:750}
+input,select,textarea{padding:10px;width:100%}
+textarea{resize:vertical}
+.inline{display:flex;gap:7px;margin-top:12px}
+.inline input{min-width:0;flex:1}
+.add{min-width:44px;font-size:21px}
+.entries{list-style:none;padding:0;margin:8px 0 0}
+.entries:empty{display:none}
+.entries li{border-top:1px solid var(--line)}
+.entries label{display:flex;align-items:center;gap:9px;padding:7px 0;min-height:44px;overflow-wrap:anywhere}
+input[type=checkbox]{accent-color:#a6eac8;width:20px;min-height:20px;flex-shrink:0}
+.entries input:checked+span{text-decoration:line-through;color:var(--muted)}
+.columns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:8px}
+.save{width:100%;margin-top:10px}
+.notice{margin-top:8px;color:var(--mint)}
+.table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+.table th,.table td{text-align:left;padding:9px 3px;border-bottom:1px solid var(--line)}
+.table th:not(:first-child),.table td:not(:first-child){text-align:right}
+.period{margin-top:10px}
+.period meter{display:block;width:100%;height:15px;accent-color:var(--lav)}
+.goal p{overflow-wrap:anywhere}
+.dock{position:fixed;bottom:0;left:0;right:0;background:#171c28;border-top:1px solid var(--line);padding:7px 13px calc(6px + env(safe-area-inset-bottom))}
+.dock nav{width:100%;max-width:475px;margin:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.dock button{border:0;background:transparent;color:var(--muted);font-size:13px;display:grid;place-items:center;gap:2px;min-height:52px}
+.dock button[aria-current=page]{background:#29354a;color:var(--mint);font-weight:700}
+.dock svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+[hidden]{display:none!important}
+.calendar{display:flex;gap:6px;margin:0 0 18px;align-items:center}.calendar input{min-width:0;flex:1}.choices{grid-template-columns:repeat(5,minmax(0,1fr))}.choices button{padding:6px 1px;font-size:24px}.choices small{display:block;font-size:11px;overflow-wrap:anywhere}.dock nav{grid-template-columns:repeat(4,1fr)}.quick{display:flex;gap:6px;margin-top:8px}.quick button{flex:1}#journal-text{min-height:38vh;line-height:1.6}
+</style>
+</head>
+<body>
+<main>
+<header><div class="brand"><span class="mark" aria-hidden="true">≈</span>Ритм</div><time class="date" id="today-date"></time></header>
+<div class="calendar" id="calendar"><button id="now">Сегодня</button><button id="next">Завтра</button><input type="date" id="selected-date" aria-label="Выбрать дату"></div>
+<section id="today">
+  <h1 id="day-title">Сегодня</h1>
+  <p class="hint intro">Утром отметь самочувствие и сверься с задачами.</p>
+  <div id="storage-warning" class="card hint" hidden role="alert">В этом режиме записи сохраняются только до закрытия страницы.</div>
+  <div class="card morning">
+    <h2>Как ты себя чувствуешь?</h2>
+    <div class="choices" id="moods" role="group" aria-label="Утреннее самочувствие">
+      <button type="button" data-mood="1" aria-pressed="false"><span aria-hidden="true">😞</span><small>Очень плохо</small></button>
+      <button type="button" data-mood="2" aria-pressed="false"><span aria-hidden="true">🙁</span><small>Плохо</small></button>
+      <button type="button" data-mood="3" aria-pressed="false"><span aria-hidden="true">😐</span><small>Нормально</small></button>
+      <button type="button" data-mood="4" aria-pressed="false"><span aria-hidden="true">🙂</span><small>Хорошо</small></button>
+      <button type="button" data-mood="5" aria-pressed="false"><span aria-hidden="true">😄</span><small>Отлично</small></button>
+    </div>
+    <p id="mood-status" class="hint notice" aria-live="polite"></p>
+  </div>
+  <div class="card">
+    <div class="row"><h2>Задачи на день</h2><span id="task-count" class="hint"></span></div>
+    <ul id="tasks" class="entries"></ul>
+    <div class="inline"><input id="task-title" aria-label="Новая задача" placeholder="Добавить задачу" maxlength="120" enterkeyhint="done"><button id="add-task" type="button" class="primary add" aria-label="Добавить задачу">+</button></div>
+    <p id="task-status" class="hint notice" role="status"></p>
+  </div>
+  <div class="card">
+    <h2>Запись о работе</h2>
+    <p class="hint">Добавь отдельную запись за каждый период работы.</p>
+    <form id="work">
+      <div class="columns">
+        <label class="field"><span class="caption">Минуты</span><input name="minutes" type="number" inputmode="numeric" min="1" max="1440" placeholder="По желанию"></label>
+        <label class="field"><span class="caption">Время дня</span><select name="period" required><option value="">Выбрать</option><option>Утро</option><option>День</option><option>Вечер</option></select></label>
+      </div>
+      <div class="quick"><button type="button" data-minutes="15">15 мин</button><button type="button" data-minutes="30">30 мин</button><button type="button" data-minutes="60">60 мин</button></div>
+      <label class="field"><span class="caption">Что получилось?</span><textarea name="result" rows="2" maxlength="600" placeholder="Например, закончил страницу."></textarea></label>
+      <button class="primary save">Сохранить работу</button>
+    </form>
+    <p id="work-status" class="hint notice" aria-live="polite"></p>
+    <div id="work-log"></div>
+  </div>
+</section>
+<section id="progress" hidden>
+  <h1>Прогресс</h1>
+  <p class="hint intro">Сравни свои первые семь дней с последними.</p>
+  <div class="card">
+    <h2>Сравнение со стартом</h2>
+    <p class="hint" id="progress-hint"></p>
+    <table class="table" id="summary" hidden><thead><tr><th scope="col">Показатель</th><th scope="col">Старт</th><th scope="col">Последние 7</th></tr></thead><tbody></tbody></table>
+  </div>
+  <div class="card">
+    <h2>В какое время ты работаешь</h2>
+    <p class="hint">За последние 7 дней. Учитывается время из записей.</p>
+    <div id="periods"></div>
+  </div>
+  <div class="card"><h2>Результаты работы</h2><div id="results"></div></div>
+</section>
+<section id="journal" hidden><h1>Дневник</h1><p class="hint intro" id="journal-date"></p><div class="card"><label for="journal-text"><h2>Как прошёл день?</h2></label><textarea class="field" id="journal-text" placeholder="Что запомнилось сегодня?"></textarea><p class="hint" id="journal-status"></p></div></section>
+<section id="goals" hidden>
+  <h1>Цели</h1>
+  <p class="hint intro">Запиши, к чему хочешь прийти. Шаги можно добавить позже.</p>
+  <div class="card">
+    <h2>Новая цель</h2>
+    <form id="add-goal" class="inline"><input name="goal" aria-label="Название цели" placeholder="Например, заработать первые 500 грн" maxlength="120" required><button class="primary add" aria-label="Добавить цель">+</button></form>
+  </div>
+  <div id="goal-list"></div>
+</section>
+</main>
+<div class="dock">
+  <nav aria-label="Разделы">
+    <button data-page="today" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4m10-4v4M3 10h18m-13 5h4"/></svg>Сегодня</button>
+    <button data-page="progress"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4m0 16h16M9 16v-5m5 5V8m5 8V5"/></svg>Прогресс</button>
+    <button data-page="journal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="15" height="18" rx="2"/><path d="M9 8h7m-7 4h7"/></svg>Дневник</button>
+    <button data-page="goals"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Цели</button>
+  </nav>
+</div>
+<script>
+'use strict';
+const storageKey = 'ritm-iphone-v1';
+const get = id => document.getElementById(id);
+const moodNames = ["","Очень плохо","Плохо","Нормально","Хорошо","Отлично"];
+const periodNames = ['Утро', 'День', 'Вечер'];
+let state = {days: {}, goals: []};
+function warnStorage() { get('storage-warning').hidden = false; }
+try {
+  const saved = localStorage.getItem(storageKey);
+  if (saved) state = JSON.parse(saved);
+  if (state.moodScale !== 5) {
+    for (const day of Object.values(state.days)) day.mood = [0, 2, 3, 4][day.mood] || 0;
+    state.moodScale = 5;
+  }
+  localStorage.setItem(storageKey, JSON.stringify(state));
+} catch { warnStorage(); }
+function persist() {
+  try { localStorage.setItem(storageKey, JSON.stringify(state)); }
+  catch { warnStorage(); }
+}
+function dayKey(date = new Date()) {
+  return [date.getFullYear(), date.getMonth() + 1, date.getDate()]
+    .map(value => String(value).padStart(2, '0')).join('-');
+}
+function offsetDate(key, offset) {
+  const date = new Date(key + 'T12:00:00');
+  date.setDate(date.getDate() + offset);
+  return dayKey(date);
+}
+let todayKey = dayKey();
+let selectedKey = todayKey;
+const emptyDay = () => ({mood: 0, tasks: [], work: []});
+const viewDay = () => state.days[selectedKey] || emptyDay();
+const editDay = () => state.days[selectedKey] ??= emptyDay();
+const dateFormatter = new Intl.DateTimeFormat('ru', {day: 'numeric', month: 'long'});
+const formatDay = key => dateFormatter.format(new Date(key + 'T12:00:00'));
+function formatTime(minutes) {
+  const parts = [];
+  if (minutes >= 60) parts.push(Math.floor(minutes / 60) + ' ч');
+  if (minutes % 60 || !parts.length) parts.push(minutes % 60 + ' мин');
+  return parts.join(' ');
+}
+function el(tag, value, className) {
+  const node = document.createElement(tag);
+  if (value !== undefined) node.textContent = value;
+  if (className) node.className = className;
+  return node;
+}
+function checkboxRow(item, onToggle) {
+  const row = el('li');
+  const label = el('label');
+  const checkbox = el('input');
+  checkbox.type = 'checkbox';
+  checkbox.checked = item.done;
+  checkbox.addEventListener('change', () => {
+    item.done = checkbox.checked;
+    persist();
+    onToggle();
+  });
+  label.append(checkbox, el('span', item.title));
+  row.append(label);
+  return row;
+}
+const moodButtons = [...get('moods').querySelectorAll('button')];
+function renderMood() {
+  const mood = viewDay().mood;
+  moodButtons.forEach(button => button.setAttribute('aria-pressed', Number(button.dataset.mood) === mood));
+  get('mood-status').textContent = mood ? 'Отмечено · ' + moodNames[mood] : '';
+}
+function renderTaskCount() {
+  const tasks = viewDay().tasks;
+  get('task-count').textContent = tasks.length ? tasks.filter(task => task.done).length + ' из ' + tasks.length : '';
+}
+function renderTasks() {
+  get('tasks').replaceChildren(...viewDay().tasks.map(item => checkboxRow(item, renderTaskCount)));
+  renderTaskCount();
+}
+function renderWork() {
+  get('work-log').replaceChildren(...viewDay().work.map(entry => {
+    const row = el('p', entry.period + (entry.minutes ? ' · ' + formatTime(entry.minutes) : '') + (entry.result ? ' · ' + entry.result : ''), 'hint period');
+    return row;
+  }));
+}
+function renderToday() {
+  get('selected-date').value = selectedKey;
+  get('day-title').textContent = selectedKey === todayKey ? 'Сегодня' : selectedKey === offsetDate(todayKey, 1) ? 'Завтра' : formatDay(selectedKey);
+  get('journal-date').textContent = formatDay(selectedKey) + ' ' + selectedKey.slice(0,4);
+  get('journal-text').value = viewDay().journal || '';
+  get('journal-status').textContent = '';
+  get('today-date').dateTime = selectedKey;
+  get('today-date').textContent = formatDay(selectedKey);
+  renderMood();
+  renderTasks();
+  renderWork();
+}
+moodButtons.forEach(button => button.addEventListener('click', () => {
+  editDay().mood = Number(button.dataset.mood);
+  persist();
+  renderMood();
+}));
+function addTask() {
+  const field = get('task-title');
+  const title = field.value.trim();
+  if (!title) {
+    get('task-status').textContent = 'Сначала введи название задачи.';
+    field.focus();
+    return;
+  }
+  editDay().tasks.push({title, done: false});
+  persist();
+  field.value = '';
+  renderTasks();
+  get('task-status').textContent = 'Добавлено на ' + formatDay(selectedKey) + '.';
+}
+get('add-task').addEventListener('click', addTask);
+get('task-title').addEventListener('keydown', event => {
+  if (event.key === 'Enter' && !event.isComposing) {
+    event.preventDefault();
+    addTask();
+  }
+});
+get('work').addEventListener('submit', event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const minutes = Number(form.elements.minutes.value);
+  const period = form.elements.period.value;
+  if (!Number.isInteger(minutes) || minutes < 0 || minutes > 1440 || !periodNames.includes(period)) return;
+  if (!minutes && !form.elements.result.value.trim()) {
+    get('work-status').textContent = 'Укажи время или запиши результат.';
+    return;
+  }
+  const day = viewDay();
+  if (day.work.reduce((sum, entry) => sum + entry.minutes, 0) + minutes > 1440) {
+    get('work-status').textContent = 'За день можно записать до 24 часов.';
+    return;
+  }
+  editDay().work.push({minutes, period, result: form.elements.result.value.trim()});
+  persist();
+  form.reset();
+  get('work-status').textContent = 'Запись добавлена.';
+  renderWork();
+});
+function summarize(entries) {
+  const days = entries.map(([, day]) => day);
+  const moods = days.map(day => day.mood).filter(Boolean);
+  const tasks = days.flatMap(day => day.tasks);
+  const minutes = days.flatMap(day => day.work).reduce((sum, entry) => sum + entry.minutes, 0);
+  const average = moods.length ? (moods.reduce((sum, mood) => sum + mood, 0) / moods.length).toLocaleString('ru', {maximumFractionDigits: 1}) + ' / 5' : '—';
+  return [average, formatTime(minutes), tasks.length ? tasks.filter(task => task.done).length + ' / ' + tasks.length : '—'];
+}
+function renderProgress() {
+  const entries = Object.entries(state.days).filter(([key]) => key <= todayKey).sort(([a], [b]) => a.localeCompare(b));
+  const start = entries[0]?.[0];
+  const baselineEnd = start && offsetDate(start, 6);
+  const recentStart = offsetDate(todayKey, -6);
+  const recent = entries.filter(([key]) => key >= recentStart);
+  get('summary').hidden = !start;
+  if (start) {
+    const baseline = summarize(entries.filter(([key]) => key <= baselineEnd));
+    const current = summarize(recent);
+    get('progress-hint').textContent = formatDay(start) + ' — ' + formatDay(baselineEnd) + ' · ' + formatDay(recentStart) + ' — ' + formatDay(todayKey) + (baselineEnd >= recentStart ? '. Пока периоды пересекаются.' : '.');
+    get('summary').tBodies[0].replaceChildren(...['Самочувствие', 'Время работы', 'Задачи'].map((label, index) => {
+      const row = el('tr');
+      const header = el('th', label);
+      header.scope = 'row';
+      row.append(header, el('td', baseline[index]), el('td', current[index]));
+      return row;
+    }));
+  } else {
+    get('progress-hint').textContent = 'Первая запись станет точкой отсчёта.';
+  }
+  const work = recent.flatMap(([, day]) => day.work);
+  const total = work.reduce((sum, entry) => sum + entry.minutes, 0);
+  get('periods').replaceChildren(...periodNames.map(period => {
+    const minutes = work.filter(entry => entry.period === period).reduce((sum, entry) => sum + entry.minutes, 0);
+    const row = el('div', undefined, 'period');
+    const label = el('div', undefined, 'row hint');
+    const meter = el('meter');
+    meter.max = total || 1;
+    meter.value = minutes;
+    meter.setAttribute('aria-label', period + ': ' + formatTime(minutes));
+    label.append(el('span', period), el('span', formatTime(minutes)));
+    row.append(label, meter);
+    return row;
+  }));
+  const results = [...entries].reverse().flatMap(([key, day]) =>
+    [...day.work].reverse().filter(entry => entry.result).map(entry => el('p', formatDay(key) + ' · ' + entry.period + ' · ' + entry.result, 'hint period')));
+  get('results').replaceChildren(...(results.length ? results : [el('p', 'Здесь появятся итоги, которые ты добавишь к записям о работе.', 'hint period')]));
+}
+function renderGoals() {
+  get('goal-list').replaceChildren(...state.goals.map(goal => {
+    const card = el('article', undefined, 'card goal');
+    const heading = el('h2', goal.title);
+    const count = el('p', '', 'hint');
+    const updateCount = () => { count.textContent = goal.steps.filter(step => step.done).length + ' из ' + goal.steps.length + ' шагов'; };
+    const list = el('ul', undefined, 'entries');
+    list.append(...goal.steps.map(step => checkboxRow(step, updateCount)));
+    const form = el('form', undefined, 'inline');
+    const field = el('input');
+    field.placeholder = 'Добавить шаг';
+    field.setAttribute('aria-label', 'Новый шаг для цели ' + goal.title);
+    field.maxLength = 120;
+    field.required = true;
+    const add = el('button', '+', 'primary add');
+    add.setAttribute('aria-label', 'Добавить шаг');
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const title = field.value.trim();
+      if (!title) return;
+      const step = {title, done: false};
+      goal.steps.push(step);
+      persist();
+      list.append(checkboxRow(step, updateCount));
+      updateCount();
+      field.value = '';
+    });
+    form.append(field, add);
+    card.append(heading, count, list, form);
+    updateCount();
+    return card;
+  }));
+}
+get('add-goal').addEventListener('submit', event => {
+  event.preventDefault();
+  const field = event.currentTarget.elements.goal;
+  const title = field.value.trim();
+  if (!title) return;
+  state.goals.push({title, steps: []});
+  persist();
+  field.value = '';
+  renderGoals();
+});
+const tabs = [...document.querySelectorAll('[data-page]')];
+tabs.forEach(tab => tab.addEventListener('click', () => {
+  tabs.forEach(button => {
+    get(button.dataset.page).hidden = button !== tab;
+    button.removeAttribute('aria-current');
+  });
+  get('calendar').hidden = !['today','journal'].includes(tab.dataset.page);
+  tab.setAttribute('aria-current', 'page');
+  if (tab.dataset.page === 'progress') renderProgress();
+  window.scrollTo(0, 0);
+}));
+function selectDate(key) {
+  if (!key) return;
+  selectedKey = key;
+  get('work').reset();
+  get('task-title').value = '';
+  get('task-status').textContent = '';
+  get('work-status').textContent = '';
+  renderToday();
+}
+get('now').onclick = () => selectDate(dayKey());
+get('next').onclick = () => selectDate(offsetDate(dayKey(), 1));
+get('selected-date').onchange = event => selectDate(event.target.value);
+get('journal-text').oninput = event => {
+  editDay().journal = event.target.value;
+  persist();
+  get('journal-status').textContent = get('storage-warning').hidden ? 'Сохранено' : 'Только до закрытия страницы';
+};
+document.querySelectorAll('[data-minutes]').forEach(button => {
+  button.onclick = () => { get('work').elements.minutes.value = button.dataset.minutes; };
+});
+function checkNewDay() {
+  const key = dayKey();
+  if (key === todayKey) return;
+  if (selectedKey === todayKey) selectedKey = key;
+  todayKey = key;
+  get('work-status').textContent = '';
+  renderToday();
+  renderProgress();
+}
+document.addEventListener('visibilitychange', checkNewDay);
+window.addEventListener('focus', checkNewDay);
+window.setInterval(checkNewDay, 30000);
+renderToday();
+renderGoals();
+</script>
+</body>
+</html>
